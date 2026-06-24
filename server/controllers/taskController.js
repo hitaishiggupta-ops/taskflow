@@ -1,8 +1,18 @@
 const Task = require("../models/Task");
-
+const { validationResult } = require("express-validator");
+const { Op } = require("sequelize");
 exports.createTask = async (req, res) => {
 
     try {
+        const errors = validationResult(req);
+
+if (!errors.isEmpty()) {
+
+    return res.status(400).json({
+        errors: errors.array()
+    });
+
+}
 
         const task = await Task.create({
 
@@ -170,6 +180,111 @@ exports.moveTask = async (req, res) => {
         await task.save();
 
         res.status(200).json(task);
+
+    }
+
+    catch (error) {
+
+        res.status(500).json({
+            message: error.message
+        });
+
+    }
+
+};
+
+exports.getTaskById = async (req, res) => {
+
+    try {
+
+        const task = await Task.findOne({
+
+            where: {
+                id: req.params.id,
+                ownerId: req.user.id
+            }
+
+        });
+
+        if (!task) {
+
+            return res.status(404).json({
+                message: "Task not found"
+            });
+
+        }
+
+        res.status(200).json(task);
+
+    }
+
+    catch (error) {
+
+        res.status(500).json({
+            message: error.message
+        });
+
+    }
+
+};
+
+exports.getOverdueTasks = async (req, res) => {
+
+    try {
+
+        const tasks = await Task.findAll({
+
+            where: {
+
+                ownerId: req.user.id,
+
+                dueDate: {
+                    [Op.lt]: new Date()
+                },
+
+                status: {
+                    [Op.ne]: "done"
+                }
+
+            }
+
+        });
+
+        res.status(200).json(tasks);
+
+    }
+
+    catch (error) {
+
+        res.status(500).json({
+            message: error.message
+        });
+
+    }
+
+};
+
+exports.searchTasks = async (req, res) => {
+
+    try {
+
+        const keyword = req.query.keyword;
+
+        const tasks = await Task.findAll({
+
+            where: {
+
+                ownerId: req.user.id,
+
+                title: {
+                    [Op.like]: `%${keyword}%`
+                }
+
+            }
+
+        });
+
+        res.status(200).json(tasks);
 
     }
 

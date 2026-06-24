@@ -9,11 +9,17 @@ const authRoutes = require("./routes/authRoutes");
 const { protect } = require("./middleware/authMiddleware");
 const boardRoutes = require("./routes/boardRoutes");
 const taskRoutes = require("./routes/taskRoutes");
+const dashboardRoutes =
+require("./routes/dashboardRoutes");
+const errorHandler =
+require("./middleware/errorMiddleware");
+
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/boards", boardRoutes);
 app.use("/api/tasks", taskRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.get("/api/profile", protect, (req, res) => {
 
@@ -30,6 +36,8 @@ app.get("/", (req, res) => {
 
 const PORT = process.env.PORT || 8000;
 require("./models");
+
+app.use(errorHandler);
 sequelize.sync()
 .then(() => {
 
